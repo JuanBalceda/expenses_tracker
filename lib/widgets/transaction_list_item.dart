@@ -16,16 +16,12 @@ class TransactionListItem extends StatelessWidget {
             padding: EdgeInsets.all(5),
             child: Text(
               '\$${_transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.purple,
-              ),
+              style: Theme.of(context).textTheme.headline6,
             ),
             margin: EdgeInsets.all(20),
             decoration: BoxDecoration(
               border: Border.all(
-                color: Colors.purple,
+                color: Theme.of(context).primaryColorDark,
                 width: 2,
               ),
             ),

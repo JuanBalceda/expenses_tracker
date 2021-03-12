@@ -3,8 +3,35 @@ import 'package:expenses_tracker/widgets/new_transaction.dart';
 import 'package:expenses_tracker/widgets/transaction_list.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(HomePage());
+void main() => runApp(ExpensesTrackerApp());
+
+class ExpensesTrackerApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Expenses Tracker',
+      theme: ThemeData(
+        primarySwatch: Colors.purple,
+        accentColor: Colors.amber,
+        fontFamily: 'QuickSand',
+        textTheme: ThemeData.light().textTheme.copyWith(
+              headline6: TextStyle(
+                fontFamily: 'OpenSans',
+                fontSize: 20,
+              ),
+            ),
+        appBarTheme: AppBarTheme(
+          textTheme: ThemeData.light().textTheme.copyWith(
+                headline6: TextStyle(
+                  fontFamily: 'OpenSans',
+                  fontSize: 20,
+                ),
+              ),
+        ),
+      ),
+      home: HomePage(),
+    );
+  }
 }
 
 class HomePage extends StatefulWidget {
@@ -57,45 +84,37 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Expenses Tracker'),
-          backgroundColor: Colors.purple,
-          actions: [
-            Builder(
-              builder: (context) => IconButton(
-                icon: Icon(Icons.add),
-                onPressed: () => _startNewTransaction(context),
-              ),
-            ),
-            IconButton(
-              icon: Icon(Icons.print),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Expenses Tracker'),
+        actions: [
+          Builder(
+            builder: (context) => IconButton(
+              icon: Icon(Icons.add),
               onPressed: () => _startNewTransaction(context),
             ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              child: Card(
+                child: Text('chart'),
+                elevation: 5,
+              ),
+            ),
+            TransactionList(_userTransactions),
           ],
         ),
-        body: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                child: Card(
-                  child: Text('chart'),
-                  elevation: 5,
-                ),
-              ),
-              TransactionList(_userTransactions),
-            ],
-          ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            child: Icon(Icons.add),
-            onPressed: () => _startNewTransaction(context),
-            backgroundColor: Colors.purple,
-          ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: Builder(
+        builder: (context) => FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () => _startNewTransaction(context),
         ),
       ),
     );
