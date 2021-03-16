@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 class TransactionList extends StatelessWidget {
   final List<Transaction> transactions;
   final Function deleteTransaction;
+
   TransactionList(this.transactions, this.deleteTransaction);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 300,
-      child: transactions.isEmpty
-          ? Column(
+    return transactions.isEmpty
+        ? LayoutBuilder(builder: (ctx, constraints) {
+            return Column(
               children: [
                 Text(
                   'No transactions added yet',
@@ -22,21 +22,20 @@ class TransactionList extends StatelessWidget {
                   height: 20,
                 ),
                 Container(
-                  height: 200,
+                  height: constraints.maxHeight * 0.4,
                   child: Image.asset(
                     'assets/images/waiting.png',
                     fit: BoxFit.cover,
                   ),
                 ),
               ],
-            )
-          : ListView.builder(
-              itemBuilder: (ctx, i) {
-                return TransactionListItem(transactions[i], deleteTransaction);
-              },
-              itemCount: transactions.length,
-              // children: transactions.map((tx) => TransactionListItem(tx)).toList(),
-            ),
-    );
+            );
+          })
+        : ListView.builder(
+            itemBuilder: (ctx, i) {
+              return TransactionListItem(transactions[i], deleteTransaction);
+            },
+            itemCount: transactions.length,
+          );
   }
 }

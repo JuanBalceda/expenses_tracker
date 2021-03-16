@@ -5,7 +5,14 @@ import 'package:expenses_tracker/widgets/transaction_list.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(ExpensesTrackerApp());
+void main() {
+  // WidgetsFlutterBinding.ensureInitialized();
+  // SystemChrome.setPreferredOrientations([
+  //   DeviceOrientation.portraitUp,
+  //   DeviceOrientation.portraitDown,
+  // ]);
+  runApp(ExpensesTrackerApp());
+}
 
 class ExpensesTrackerApp extends StatelessWidget {
   @override
@@ -58,6 +65,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Transaction> _userTransactions = [];
+  bool _showChart = false;
 
   List<Transaction> get _recentTransactions {
     return _userTransactions.where((tx) {
@@ -107,6 +115,29 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     var platForm = Theme.of(context).platform;
     var isIOS = platForm == TargetPlatform.iOS;
+    var mediaQuery = MediaQuery.of(context);
+    var isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    var appBar = AppBar(
+      title: Text('Expenses Tracker'),
+      actions: [
+        Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.add),
+            onPressed: () => _startNewTransaction(context),
+          ),
+        ),
+      ],
+    );
+
+    var availableHeight = mediaQuery.size.height -
+        appBar.preferredSize.height -
+        mediaQuery.padding.top;
+
+    var transactions = Container(
+      height: availableHeight * 0.7,
+      child: TransactionList(_userTransactions, _deleteTransaction),
+    );
 
     return isIOS
         ? CupertinoPageScaffold(
@@ -131,23 +162,39 @@ class _HomePageState extends State<HomePage> {
             ),
           )
         : Scaffold(
-            appBar: AppBar(
-              title: Text('Expenses Tracker'),
-              actions: [
-                Builder(
-                  builder: (context) => IconButton(
-                    icon: Icon(Icons.add),
-                    onPressed: () => _startNewTransaction(context),
-                  ),
-                ),
-              ],
-            ),
+            appBar: appBar,
             body: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Chart(_recentTransactions),
-                  TransactionList(_userTransactions, _deleteTransaction),
+                  if (isLandscape)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Show Chart'),
+                        Switch(
+                          value: _showChart,
+                          onChanged: (val) {
+                            setState(() {
+                              _showChart = val;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  if (!isLandscape)
+                    Container(
+                      height: availableHeight * 0.3,
+                      child: Chart(_recentTransactions),
+                    ),
+                  if (!isLandscape) transactions,
+                  if (isLandscape)
+                    _showChart
+                        ? Container(
+                            height: availableHeight * 0.7,
+                            child: Chart(_recentTransactions),
+                          )
+                        : transactions,
                 ],
               ),
             ),
