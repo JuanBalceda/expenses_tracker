@@ -4,49 +4,41 @@ import 'package:intl/intl.dart';
 
 class TransactionListItem extends StatelessWidget {
   final Transaction _transaction;
+  final Function deleteTransaction;
 
-  TransactionListItem(this._transaction);
+  TransactionListItem(this._transaction, this.deleteTransaction);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(5),
-            child: Text(
-              '\$${_transaction.amount.toStringAsFixed(2)}',
-              style: Theme.of(context).textTheme.headline6,
-            ),
-            margin: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: Theme.of(context).primaryColorDark,
-                width: 2,
-              ),
+      elevation: 5,
+      margin: EdgeInsets.symmetric(
+        vertical: 8,
+        horizontal: 5,
+      ),
+      child: ListTile(
+        leading: CircleAvatar(
+          radius: 30,
+          child: Padding(
+            padding: EdgeInsets.all(6),
+            child: FittedBox(
+              child: Text('\$${_transaction.amount.toStringAsFixed(2)}'),
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _transaction.title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                DateFormat.yMMMMd().format(_transaction.date),
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          )
-        ],
+        ),
+        title: Text(
+          _transaction.title,
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        subtitle: Text(
+          DateFormat.yMMMMd().format(_transaction.date),
+        ),
+        trailing: IconButton(
+          icon: Icon(Icons.delete),
+          color: Colors.red,
+          onPressed: () => deleteTransaction(_transaction.id),
+        ),
       ),
-      elevation: 5,
     );
   }
 }

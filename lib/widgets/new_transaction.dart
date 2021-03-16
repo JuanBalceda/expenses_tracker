@@ -1,4 +1,7 @@
+import 'package:expenses_tracker/dt_witgets/dt_text_field.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NewTransaction extends StatefulWidget {
   final Function addTransaction;
@@ -12,19 +15,37 @@ class NewTransaction extends StatefulWidget {
 class _NewTransactionState extends State<NewTransaction> {
   final titleController = TextEditingController();
   final amountController = TextEditingController();
+  DateTime _selectedDate = DateTime.now();
 
-  void onSubmit() {
+  void _onSubmit() {
+    if (titleController.text.isEmpty || amountController.text.isEmpty) return;
+
     final enteredTitle = titleController.text;
     final enteredAmount = double.parse(amountController.text);
-
-    if (enteredTitle.isEmpty || enteredAmount <= 0) return;
+    if (enteredAmount <= 0) return;
 
     widget.addTransaction(
       enteredTitle,
       enteredAmount,
+      _selectedDate,
     );
 
     Navigator.of(context).pop();
+  }
+
+  void _presentDatePicker() {
+    showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2019),
+      lastDate: DateTime.now(),
+    ).then((pickedDate) {
+      if (pickedDate == null) return;
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+      print(pickedDate);
+    });
   }
 
   @override
@@ -35,26 +56,36 @@ class _NewTransactionState extends State<NewTransaction> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Title',
-              ),
+            DtTextField(
               controller: titleController,
-              onSubmitted: (_) => onSubmit(),
-              // onChanged: (value) => titleInput = value,
+              onSubmit: (_) => _onSubmit(),
+              label: 'Title',
+              keyboardType: TextInputType.text,
             ),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Amount',
-              ),
+            DtTextField(
               controller: amountController,
-              keyboardType: TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              onSubmitted: (_) => onSubmit(),
+              label: 'amount',
+              onSubmit: (_) => _onSubmit(),
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
             ),
-            TextButton(
-              onPressed: onSubmit,
+            Container(
+              height: 70,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${DateFormat.yMd().format(_selectedDate)}'),
+                  TextButton(
+                    onPressed: _presentDatePicker,
+                    child: Text(
+                      'Chose date',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ElevatedButton(
+              onPressed: _onSubmit,
               child: Text('Add Transaction'),
             )
           ],
