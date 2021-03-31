@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:expenses_tracker/models/transaction.dart';
 import 'package:expenses_tracker/widgets/chart.dart';
 import 'package:expenses_tracker/widgets/new_transaction.dart';
@@ -18,10 +20,8 @@ class ExpensesTrackerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var title = 'Expenses Tracker';
-    var platForm = Theme.of(context).platform;
-    var isIOS = platForm == TargetPlatform.iOS;
 
-    return isIOS
+    /*Platform.isIOS
         ? CupertinoApp(
             debugShowCheckedModeBanner: false,
             title: title,
@@ -31,30 +31,31 @@ class ExpensesTrackerApp extends StatelessWidget {
             ),
             home: HomePage(),
           )
-        : MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: title,
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-              accentColor: Colors.pink,
-              fontFamily: 'QuickSand',
-              textTheme: ThemeData.light().textTheme.copyWith(
-                    headline6: TextStyle(
-                      fontFamily: 'OpenSans',
-                      fontSize: 20,
-                    ),
-                  ),
-              appBarTheme: AppBarTheme(
-                textTheme: ThemeData.light().textTheme.copyWith(
-                      headline6: TextStyle(
-                        fontFamily: 'OpenSans',
-                        fontSize: 20,
-                      ),
-                    ),
+        : */
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: title,
+      theme: ThemeData(
+        primarySwatch: Platform.isIOS ? Colors.purple : Colors.blue,
+        accentColor: Platform.isIOS ? Colors.amber : Colors.pink,
+        fontFamily: 'QuickSand',
+        textTheme: ThemeData.light().textTheme.copyWith(
+              headline6: TextStyle(
+                fontFamily: 'OpenSans',
+                fontSize: 20,
               ),
             ),
-            home: HomePage(),
-          );
+        appBarTheme: AppBarTheme(
+          textTheme: ThemeData.light().textTheme.copyWith(
+                headline6: TextStyle(
+                  fontFamily: 'OpenSans',
+                  fontSize: 20,
+                ),
+              ),
+        ),
+      ),
+      home: HomePage(),
+    );
   }
 }
 
@@ -63,7 +64,7 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   List<Transaction> _userTransactions = [];
   bool _showChart = false;
 
@@ -87,22 +88,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startNewTransaction(BuildContext ctx) {
-    var platForm = Theme.of(context).platform;
-    var isIOS = platForm == TargetPlatform.iOS;
-
     var builder = (_) => NewTransaction(_addNewTransaction);
 
-    if (isIOS) {
-      showCupertinoDialog(
-        context: ctx,
-        builder: builder,
-      );
-    } else {
-      showModalBottomSheet(
-        context: ctx,
-        builder: builder,
-      );
-    }
+    showModalBottomSheet(
+      context: ctx,
+      builder: builder,
+    );
+    // }
   }
 
   void _deleteTransaction(String id) {
@@ -111,24 +103,75 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  List<Widget> _buildLandscapeContent(
+    Widget transactions,
+    double availableHeight,
+  ) {
+    return [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Show Chart',
+            style: Theme.of(context).textTheme.bodyText2,
+          ),
+          Switch.adaptive(
+            activeColor: Theme.of(context).accentColor,
+            value: _showChart,
+            onChanged: (val) {
+              setState(() {
+                _showChart = val;
+              });
+            },
+          ),
+        ],
+      ),
+      _showChart
+          ? Container(
+              height: availableHeight * 0.7,
+              child: Chart(_recentTransactions),
+            )
+          : transactions,
+    ];
+  }
+
+  List<Widget> _buildPortraitContent(
+    Widget transactions,
+    double availableHeight,
+  ) {
+    return [
+      Container(
+        height: availableHeight * 0.3,
+        child: Chart(_recentTransactions),
+      ),
+      transactions,
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    var platForm = Theme.of(context).platform;
-    var isIOS = platForm == TargetPlatform.iOS;
-    var mediaQuery = MediaQuery.of(context);
-    var isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final PreferredSizeWidget appBar = Platform.isIOS
+        ? CupertinoNavigationBar(
+            middle: Text('Expenses Tracker'),
+            trailing: CupertinoButton(
+              onPressed: () => _startNewTransaction(context),
+              child: Icon(CupertinoIcons.add),
+              padding: EdgeInsets.all(0),
+            ),
+          ) as PreferredSizeWidget
+        : AppBar(
+            title: Text('Expenses Tracker'),
+            actions: [
+              Builder(
+                builder: (context) => IconButton(
+                  icon: Icon(Icons.add),
+                  onPressed: () => _startNewTransaction(context),
+                ),
+              ),
+            ],
+          );
 
-    var appBar = AppBar(
-      title: Text('Expenses Tracker'),
-      actions: [
-        Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () => _startNewTransaction(context),
-          ),
-        ),
-      ],
-    );
+    var mediaQuery = MediaQuery.of(context);
 
     var availableHeight = mediaQuery.size.height -
         appBar.preferredSize.height -
@@ -139,65 +182,30 @@ class _HomePageState extends State<HomePage> {
       child: TransactionList(_userTransactions, _deleteTransaction),
     );
 
-    return isIOS
+    var isLandscape = mediaQuery.orientation == Orientation.landscape;
+
+    var pageBody = SafeArea(
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (isLandscape)
+              ..._buildLandscapeContent(transactions, availableHeight)
+            else
+              ..._buildPortraitContent(transactions, availableHeight)
+          ],
+        ),
+      ),
+    );
+
+    return Platform.isIOS
         ? CupertinoPageScaffold(
-            navigationBar: CupertinoNavigationBar(
-              middle: Text('Expenses Tracker'),
-              trailing: CupertinoButton(
-                onPressed: () => _startNewTransaction(context),
-                child: Icon(CupertinoIcons.add),
-                padding: EdgeInsets.all(0),
-              ),
-            ),
-            child: Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Chart(_recentTransactions),
-                    TransactionList(_userTransactions, _deleteTransaction),
-                  ],
-                ),
-              ),
-            ),
+            navigationBar: appBar as CupertinoNavigationBar,
+            child: pageBody,
           )
         : Scaffold(
             appBar: appBar,
-            body: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (isLandscape)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('Show Chart'),
-                        Switch(
-                          value: _showChart,
-                          onChanged: (val) {
-                            setState(() {
-                              _showChart = val;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  if (!isLandscape)
-                    Container(
-                      height: availableHeight * 0.3,
-                      child: Chart(_recentTransactions),
-                    ),
-                  if (!isLandscape) transactions,
-                  if (isLandscape)
-                    _showChart
-                        ? Container(
-                            height: availableHeight * 0.7,
-                            child: Chart(_recentTransactions),
-                          )
-                        : transactions,
-                ],
-              ),
-            ),
+            body: pageBody,
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerFloat,
             floatingActionButton: Builder(
@@ -207,5 +215,24 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    print('initState::');
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    print('dispose::');
+    WidgetsBinding.instance!.removeObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    print(state);
   }
 }

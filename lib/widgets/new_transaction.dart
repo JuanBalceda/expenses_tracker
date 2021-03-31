@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:expenses_tracker/dt_witgets/dt_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -80,13 +82,21 @@ class _NewTransactionState extends State<NewTransaction> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${DateFormat.yMd().format(_selectedDate)}'),
-                    TextButton(
-                      onPressed: _presentDatePicker,
-                      child: Text(
-                        'Chose date',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
+                    Platform.isIOS
+                        ? CupertinoButton(
+                            onPressed: _presentDatePicker,
+                            child: Text(
+                              'Chose date',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          )
+                        : TextButton(
+                            onPressed: _presentDatePicker,
+                            child: Text(
+                              'Chose date',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
                   ],
                 ),
               ),
